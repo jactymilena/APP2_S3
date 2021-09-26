@@ -34,6 +34,14 @@ CREATE TABLE Privilege
     nom VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE Fonction
+(
+    id_fonction CHAR(4) NOT NULL,
+    nom VARCHAR(100) NOT NULL,
+    PRIMARY KEY (id_fonction)
+);
+
+
 CREATE TABLE Local
 (
     nom_local CHAR(4) NOT NULL,
@@ -41,19 +49,12 @@ CREATE TABLE Local
     description VARCHAR(300),
     id_parent CHAR(4),
     id_pavillon CHAR(2) NOT NULL,
-    id_fonction INT NOT NULL,
+    id_fonction CHAR(4) NOT NULL,
     PRIMARY KEY (nom_local),
     FOREIGN KEY (id_pavillon) REFERENCES Pavillon(id_pavillon),
     FOREIGN KEY (id_fonction) REFERENCES Fonction(id_fonction),
     CONSTRAINT local_id_local
         CHECK (nom_local SIMILAR TO '[0-9]{4}')
-);
-
-CREATE TABLE Fonction
-(
-    id_fonction CHAR(4) NOT NULL,
-    nom VARCHAR(100) NOT NULL,
-    PRIMARY KEY (id_fonction)
 );
 
 CREATE TABLE Operation
