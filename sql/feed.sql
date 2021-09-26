@@ -72,10 +72,6 @@ INSERT INTO Fonction (id_fonction, nom) VALUES ('1030', 'Studio d''enregistremen
 INSERT INTO Fonction (id_fonction, nom) VALUES ('1260', 'Hall d''entrée');
 
 
-
-
-
-
 SELECT * FROM Faculte;
 SELECT * FROM Pavillon;
 SELECT * FROM pavillon_faculte;
