@@ -41,7 +41,6 @@ CREATE TABLE Fonction
     PRIMARY KEY (id_fonction)
 );
 
-
 CREATE TABLE Local
 (
     nom_local CHAR(4) NOT NULL,
