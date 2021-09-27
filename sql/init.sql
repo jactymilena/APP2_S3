@@ -59,7 +59,7 @@ CREATE TABLE Local
 CREATE TABLE Operation
 (
     id_operation SERIAL PRIMARY KEY NOT NULL,
-    nom INT NOT NULL
+    nom VARCHAR(50) NOT NULL
 );
 
 CREATE TABLE Pavillon_Faculte

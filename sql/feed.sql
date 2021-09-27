@@ -133,9 +133,23 @@ INSERT INTO Caracteristique (nom) VALUES ('Amplificateur audio');
 INSERT INTO Caracteristique (nom) VALUES ('Local barré');
 INSERT INTO Caracteristique (nom) VALUES ('Prise réseau');
 
+-- Insertions Table Local_Caracteristique --
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3014', 30);
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3007', 10);
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3007', 13);
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3007', 23);
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3007', 38);
+INSERT INTO local_caracteristique (nom_local, id_caracteristique) VALUES ('3007', 37);
+
+-- Insertions Table Operation --
+INSERT INTO Operation (nom) VALUES ('Nouvelle réservation');
+INSERT INTO Operation (nom) VALUES ('Suppression réservation');
+INSERT INTO Operation (nom) VALUES ('Modification réservation');
+INSERT INTO Operation (nom) VALUES ('Nouvelle connexion');
+INSERT INTO Operation (nom) VALUES ('Deconnexion');
 
 
-
+SELECT * FROM local_caracteristique;
 SELECT * FROM Faculte;
 SELECT * FROM Pavillon;
 SELECT * FROM pavillon_faculte;
@@ -143,3 +157,58 @@ SELECT * FROM Departement;
 SELECT * FROM statut_privilege;
 SELECT * FROM privilege;
 SELECT * FROM Local;
+
+SELECT * FROM Journal;
+SELECT * FROM Reservation;
+
+-- Insertions Table Reservation -- faire contrainte
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (9, 13, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (18, 20, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (8, 9, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (13, 18, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (20, 21, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (5, 6, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (4, 5, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+
+
+
+CREATE OR REPLACE FUNCTION journal_insert()
+RETURNS TRIGGER AS
+$$
+DECLARE
+    operation_id INT;
+    action VARCHAR(10);
+BEGIN
+    action = TG_ARGV[0];
+    CASE
+        WHEN action = 'INSERT' THEN
+            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
+        WHEN action = 'DELETE' THEN
+            -- AJOUTER AUSSI LE CHANGEMENT DE L'ETAT
+            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Suppression réservation';
+        WHEN action = 'UPDATE' THEN
+            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Modification réservation';
+        ELSE
+            RAISE NOTICE 'Aucune action';
+    END CASE;
+    INSERT INTO Journal (cip, id_operation)
+        VALUES (NEW.cip, operation_id);
+    RETURN NULL;
+END
+$$
+    LANGUAGE plpgsql;
+
+DROP TRIGGER log_reservation_insert ON Reservation;
+CREATE TRIGGER log_reservation_insert
+    AFTER INSERT ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION journal_insert('INSERT');
+
+DROP TRIGGER log_reservation_update ON Reservation;
+CREATE TRIGGER log_reservation_update
+    AFTER UPDATE ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION journal_insert('UPDATE');
+
+DROP TRIGGER log_reservation_delete ON Reservation;
+CREATE TRIGGER log_reservation_delete
+    INSTEAD OF DELETE ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION journal_insert('DELETE');
