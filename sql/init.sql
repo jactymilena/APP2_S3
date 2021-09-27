@@ -134,7 +134,7 @@ CREATE TABLE Reservation
     fin INT NOT NULL,
     id_reservation SERIAL PRIMARY KEY NOT NULL,
     date DATE NOT NULL,
-    description VARCHAR(300) NOT NULL,
+    description VARCHAR(300),
     etat BOOLEAN NOT NULL,
     nom_local CHAR(4) NOT NULL,
     cip CHAR(8) NOT NULL,
