@@ -171,51 +171,86 @@ INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VA
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (4, 5, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
 
+--ProcédureTableau--
+SELECT CURRENT_DATE;
+--nom local/ id de la fonction/ nom de la fonction
+SELECT nom_local,fonction.id_fonction,fonction.nom FROM local
+    JOIN fonction
+        ON local.id_fonction = fonction.id_fonction;
+
+
+
+--Date de reservation avec le debut/fin, id_pavillon et le nom du local avec le nom/prenom de la personne qui reserve + description si besoin
+SELECT date,debut,fin,id_pavillon,reservation.nom_local,prenom,nom,reservation.description FROM reservation
+    JOIN membre m
+        ON reservation.cip = m.cip
+    JOIN local l
+        ON reservation.nom_local = l.nom_local;
+
+
+--display des heures durant 1 journee (8-minuit)
+
+SELECT TIME '8:00' + interval '0:15'
+WHERE TIME BETWEEN '8:00' AND '24:00';
+
+WITH q AS
+          (
+              SELECT  30 AS num
+              UNION ALL
+              -- SQLINES LICENSE FOR EVALUATION USE ONLY
+              SELECT  num + 30
+              FROM    q
+              WHERE num < 24 * 60
+          )
+-- SQLINES LICENSE FOR EVALUATION USE ONLY
+ SELECT  num * interval '1 MINUTE' + cast('00:00:00' as time(0))
+ FROM    q
+
 --- TRIGGER ---
 
-UPDATE Reservation SET debut = 10 WHERE id_reservation = 1;
-DELETE FROM Reservation WHERE id_reservation = 1;
-
-
-CREATE OR REPLACE FUNCTION journal_insert()
-RETURNS TRIGGER AS
-$$
-DECLARE
-    operation_id INT;
-    action VARCHAR(20);
-BEGIN
-    action = TG_ARGV[0];
-    CASE
-        WHEN action = 'INSERT' THEN
-            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
-        WHEN action = 'DELETE' THEN
-            -- AJOUTER AUSSI LE CHANGEMENT DE L'ETAT
-            UPDATE Reservation SET etat = false WHERE id_reservation = NEW.id_reservation;
-            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Suppression réservation';
-            RETURN NULL;
-        WHEN action = 'UPDATE' THEN
-            SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Modification réservation';
-        ELSE
-            RAISE NOTICE 'Aucune action';
-    END CASE;
-    INSERT INTO Journal (cip, id_operation)
-        VALUES (NEW.cip, operation_id);
-    RETURN NEW;
-END
-$$
-    LANGUAGE plpgsql;
-
-DROP TRIGGER log_reservation_insert ON Reservation;
-CREATE TRIGGER log_reservation_insert
-    AFTER INSERT ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('INSERT');
-
-DROP TRIGGER log_reservation_update ON Reservation;
-CREATE TRIGGER log_reservation_update
-    AFTER UPDATE ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('UPDATE');
-
-DROP TRIGGER log_reservation_delete ON Reservation;
-CREATE TRIGGER log_reservation_delete
-    INSTEAD OF DELETE ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('DELETE');
+-- UPDATE Reservation SET debut = 10 WHERE id_reservation = 1;
+-- DELETE FROM Reservation WHERE id_reservation = 1;
+--
+--
+-- CREATE OR REPLACE FUNCTION journal_insert()
+-- RETURNS TRIGGER AS
+-- $$
+-- DECLARE
+--     operation_id INT;
+--     action VARCHAR(20);
+-- BEGIN
+--     action = TG_ARGV[0];
+--     CASE
+--         WHEN action = 'INSERT' THEN
+--             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
+--         WHEN action = 'DELETE' THEN
+--             -- AJOUTER AUSSI LE CHANGEMENT DE L'ETAT
+--             UPDATE Reservation SET etat = false WHERE id_reservation = NEW.id_reservation;
+--             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Suppression réservation';
+--             RETURN NULL;
+--         WHEN action = 'UPDATE' THEN
+--             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Modification réservation';
+--         ELSE
+--             RAISE NOTICE 'Aucune action';
+--     END CASE;
+--     INSERT INTO Journal (cip, id_operation)
+--         VALUES (NEW.cip, operation_id);
+--     RETURN NEW;
+-- END
+-- $$
+--     LANGUAGE plpgsql;
+--
+-- DROP TRIGGER log_reservation_insert ON Reservation;
+-- CREATE TRIGGER log_reservation_insert
+--     AFTER INSERT ON Reservation
+--     FOR EACH ROW EXECUTE FUNCTION journal_insert('INSERT');
+--
+-- DROP TRIGGER log_reservation_update ON Reservation;
+-- CREATE TRIGGER log_reservation_update
+--     AFTER UPDATE ON Reservation
+--     FOR EACH ROW EXECUTE FUNCTION journal_insert('UPDATE');
+--
+-- DROP TRIGGER log_reservation_delete ON Reservation;
+-- CREATE TRIGGER log_reservation_delete
+--     INSTEAD OF DELETE ON Reservation
+--     FOR EACH ROW EXECUTE FUNCTION journal_insert('DELETE');
