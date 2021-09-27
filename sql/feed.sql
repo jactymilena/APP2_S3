@@ -171,13 +171,18 @@ INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VA
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (4, 5, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
 
+--- TRIGGER ---
+
+UPDATE Reservation SET debut = 10 WHERE id_reservation = 1;
+DELETE FROM Reservation WHERE id_reservation = 1;
+
 
 CREATE OR REPLACE FUNCTION journal_insert()
 RETURNS TRIGGER AS
 $$
 DECLARE
     operation_id INT;
-    action VARCHAR(10);
+    action VARCHAR(20);
 BEGIN
     action = TG_ARGV[0];
     CASE
@@ -185,7 +190,9 @@ BEGIN
             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
         WHEN action = 'DELETE' THEN
             -- AJOUTER AUSSI LE CHANGEMENT DE L'ETAT
+            UPDATE Reservation SET etat = false WHERE id_reservation = NEW.id_reservation;
             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Suppression réservation';
+            RETURN NULL;
         WHEN action = 'UPDATE' THEN
             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Modification réservation';
         ELSE
@@ -193,7 +200,7 @@ BEGIN
     END CASE;
     INSERT INTO Journal (cip, id_operation)
         VALUES (NEW.cip, operation_id);
-    RETURN NULL;
+    RETURN NEW;
 END
 $$
     LANGUAGE plpgsql;
