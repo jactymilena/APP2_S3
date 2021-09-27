@@ -162,13 +162,13 @@ SELECT * FROM Journal;
 SELECT * FROM Reservation;
 
 -- Insertions Table Reservation -- faire contrainte
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (9, 13, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (18, 20, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (8, 9, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (13, 18, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (20, 21, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (5, 6, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (4, 5, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('18:00', '20:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('8:00', '9:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('13:00', '18:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('20:00', '21:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('5:00', '6:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
 
 --- TRIGGER ---
@@ -177,7 +177,7 @@ UPDATE Reservation SET debut = 10 WHERE id_reservation = 1;
 DELETE FROM Reservation WHERE id_reservation = 1;
 
 
-CREATE OR REPLACE FUNCTION journal_insert()
+CREATE OR REPLACE FUNCTION reservation_insert()
 RETURNS TRIGGER AS
 $$
 DECLARE
@@ -203,19 +203,58 @@ BEGIN
     RETURN NEW;
 END
 $$
-    LANGUAGE plpgsql;
+LANGUAGE plpgsql;
+
+SELECT (TIME '9:00', TIME '10:00') OVERLAPS (TIME '5:00', TIME '6:00');
+SELECT (DATE '2016-01-10', DATE '2016-02-01') OVERLAPS (DATE '2016-01-20', DATE '2016-02-10');
+
+CREATE OR REPLACE FUNCTION reservation_insert()
+RETURNS TRIGGER AS
+$$
+DECLARE
+operation_id INT;
+BEGIN
+    -- Gestion des chevauchements
+
+    -- Insertion dans le journal
+    SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
+
+END
+$$
+
+CREATE OR REPLACE FUNCTION reservation_update()
+RETURNS TRIGGER AS
+$$
+DECLARE
+operation_id INT;
+BEGIN
+
+END
+$$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION reservation_delete()
+RETURNS TRIGGER AS
+$$
+DECLARE
+operation_id INT;
+BEGIN
+
+END
+$$
+LANGUAGE plpgsql;
 
 DROP TRIGGER log_reservation_insert ON Reservation;
 CREATE TRIGGER log_reservation_insert
     AFTER INSERT ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('INSERT');
+    FOR EACH ROW EXECUTE FUNCTION reservation_insert('INSERT');
 
 DROP TRIGGER log_reservation_update ON Reservation;
 CREATE TRIGGER log_reservation_update
     AFTER UPDATE ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('UPDATE');
+    FOR EACH ROW EXECUTE FUNCTION reservation_update('UPDATE');
 
 DROP TRIGGER log_reservation_delete ON Reservation;
 CREATE TRIGGER log_reservation_delete
     INSTEAD OF DELETE ON Reservation
-    FOR EACH ROW EXECUTE FUNCTION journal_insert('DELETE');
+    FOR EACH ROW EXECUTE FUNCTION reservation_delete('DELETE');
