@@ -130,8 +130,8 @@ CREATE TABLE Membre
 
 CREATE TABLE Reservation
 (
-    debut INT NOT NULL,
-    fin INT NOT NULL,
+    debut TIME NOT NULL,
+    fin TIME NOT NULL,
     id_reservation SERIAL PRIMARY KEY NOT NULL,
     date DATE NOT NULL,
     description VARCHAR(300),
@@ -139,7 +139,9 @@ CREATE TABLE Reservation
     nom_local CHAR(4) NOT NULL,
     cip CHAR(8) NOT NULL,
     FOREIGN KEY (nom_local) REFERENCES Local(nom_local),
-    FOREIGN KEY (cip) REFERENCES Membre(cip)
+    FOREIGN KEY (cip) REFERENCES Membre(cip),
+    CONSTRAINT time_check
+        CHECK (debut < fin)
 );
 
 CREATE TABLE Role
