@@ -139,7 +139,9 @@ CREATE TABLE Reservation
     nom_local CHAR(4) NOT NULL,
     cip CHAR(8) NOT NULL,
     FOREIGN KEY (nom_local) REFERENCES Local(nom_local),
-    FOREIGN KEY (cip) REFERENCES Membre(cip)
+    FOREIGN KEY (cip) REFERENCES Membre(cip),
+    CONSTRAINT time_check
+        CHECK (debut < fin)
 );
 
 CREATE TABLE Role

@@ -169,53 +169,109 @@ INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VA
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('20:00', '21:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('5:00', '6:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
---- TRIGGER ---
+--- TRIGGER TEST ---
+UPDATE Reservation SET debut = '10:00' WHERE id_reservation = 1;
+UPDATE Reservation SET etat = False WHERE id_reservation = 1;
+DELETE FROM Reservation WHERE id_reservation = 1;
 
--- UPDATE Reservation SET debut = 10 WHERE id_reservation = 1;
--- DELETE FROM Reservation WHERE id_reservation = 1;
---
---
--- CREATE OR REPLACE FUNCTION journal_insert()
--- RETURNS TRIGGER AS
--- $$
--- DECLARE
---     operation_id INT;
---     action VARCHAR(20);
--- BEGIN
---     action = TG_ARGV[0];
---     CASE
---         WHEN action = 'INSERT' THEN
---             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
---         WHEN action = 'DELETE' THEN
---             -- AJOUTER AUSSI LE CHANGEMENT DE L'ETAT
---             UPDATE Reservation SET etat = false WHERE id_reservation = NEW.id_reservation;
---             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Suppression réservation';
---             RETURN NULL;
---         WHEN action = 'UPDATE' THEN
---             SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Modification réservation';
---         ELSE
---             RAISE NOTICE 'Aucune action';
---     END CASE;
---     INSERT INTO Journal (cip, id_operation)
---         VALUES (NEW.cip, operation_id);
---     RETURN NEW;
--- END
--- $$
---     LANGUAGE plpgsql;
---
--- DROP TRIGGER log_reservation_insert ON Reservation;
--- CREATE TRIGGER log_reservation_insert
---     AFTER INSERT ON Reservation
---     FOR EACH ROW EXECUTE FUNCTION journal_insert('INSERT');
---
--- DROP TRIGGER log_reservation_update ON Reservation;
--- CREATE TRIGGER log_reservation_update
---     AFTER UPDATE ON Reservation
---     FOR EACH ROW EXECUTE FUNCTION journal_insert('UPDATE');
---
--- DROP TRIGGER log_reservation_delete ON Reservation;
--- CREATE TRIGGER log_reservation_delete
---     INSTEAD OF DELETE ON Reservation
---     FOR EACH ROW EXECUTE FUNCTION journal_insert('DELETE');
+-- SELECT id_pavillon || '-' ||local.nom_local INTO nom_pav_local FROM Local
+-- WHERE nom_local = NEW.nom_local;
+
+SELECT verification_chevauchement(TIME '5:00', TIME '6:00', '3014');
+
+-- Function gérant les chevauchements --
+CREATE OR REPLACE FUNCTION verification_chevauchement(new_debut TIME, new_fin_ TIME, new_nom_local CHAR(4))
+RETURNS BOOLEAN AS
+$$
+DECLARE
+    chevauchement BOOLEAN;
+BEGIN
+    chevauchement = NULL;
+    WITH get_chevauchement AS (
+        SELECT ((new_debut, new_fin_) OVERLAPS (Reservation.debut,Reservation.fin)) AS chevauchement_state
+        FROM Reservation WHERE etat = True AND nom_local = new_nom_local
+    )
+    SELECT chevauchement_state INTO chevauchement FROM get_chevauchement WHERE chevauchement_state = True;
+    RETURN chevauchement;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- Function pour l'insertion dans le journal selon le nom de l'opération et le cip du membre --
+CREATE OR REPLACE FUNCTION journal_insert(nom VARCHAR(40), cip CHAR(8))
+RETURNS BOOLEAN AS
+$$
+DECLARE
+    operation_id INT;
+BEGIN
+    SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
+    INSERT INTO Journal (cip, id_operation)
+    VALUES (cip, operation_id);
+    RETURN True;
+END;
+$$
+LANGUAGE plpgsql;
+
+-- Trigger Function pour l'insert de la table Reservation --
+CREATE OR REPLACE FUNCTION reservation_insert()
+RETURNS TRIGGER AS
+$$
+DECLARE
+    nom_pav_local CHAR(6);
+BEGIN
+    -- Gestion des chevauchements
+    IF (SELECT verification_chevauchement(NEW.debut, NEW.fin, NEW.nom_local)) IS NULL THEN
+        -- Insertion dans le journal
+        SELECT journal_insert(VARCHAR(40) 'Nouvelle réservation',NEW.cip);
+        RETURN NEW;
+    ELSE
+        RETURN NULL;
+    END IF;
+END
+$$
+LANGUAGE plpgsql;
+
+-- Trigger Function pour l'update de la table Reservation --
+CREATE OR REPLACE FUNCTION reservation_update()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    -- Vérification si suppression
+    IF NEW.etat = False THEN
+        SELECT journal_insert(VARCHAR(40) 'Suppression réservation',NEW.cip);
+    ELSE
+        SELECT journal_insert(VARCHAR(40) 'Modification réservation',NEW.cip);
+    END IF;
+    RETURN NEW;
+END
+$$
+LANGUAGE plpgsql;
+
+-- Trigger Function pour le delete de la table Reservation --
+CREATE OR REPLACE FUNCTION reservation_delete()
+RETURNS TRIGGER AS
+$$
+BEGIN
+    RETURN NULL;
+END
+$$
+LANGUAGE plpgsql;
+
+-- Création de trigger pour l'insertion dans la table Reservation --
+DROP TRIGGER log_reservation_insert ON Reservation;
+CREATE TRIGGER log_reservation_insert
+    BEFORE INSERT ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION reservation_insert();
+
+-- Création de trigger pour l'update dans la table Reservation --
+DROP TRIGGER log_reservation_update ON Reservation;
+CREATE TRIGGER log_reservation_update
+    AFTER UPDATE ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION reservation_update();
+
+-- Création de trigger pour le delete dans la table Reservation --
+DROP TRIGGER log_reservation_delete ON Reservation;
+CREATE TRIGGER log_reservation_delete
+    BEFORE DELETE ON Reservation
+    FOR EACH ROW EXECUTE FUNCTION reservation_delete();
