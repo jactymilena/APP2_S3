@@ -162,49 +162,14 @@ SELECT * FROM Journal;
 SELECT * FROM Reservation;
 
 -- Insertions Table Reservation -- faire contrainte
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (9, 13, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (18, 20, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (8, 9, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (13, 18, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (20, 21, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (5, 6, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES (4, 5, NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-
-
---ProcédureTableau--
-SELECT CURRENT_DATE;
---nom local/ id de la fonction/ nom de la fonction
-SELECT nom_local,fonction.id_fonction,fonction.nom FROM local
-    JOIN fonction
-        ON local.id_fonction = fonction.id_fonction;
-
-
-
---Date de reservation avec le debut/fin, id_pavillon et le nom du local avec le nom/prenom de la personne qui reserve + description si besoin
-SELECT date,debut,fin,id_pavillon,reservation.nom_local,prenom,nom,reservation.description FROM reservation
-    JOIN membre m
-        ON reservation.cip = m.cip
-    JOIN local l
-        ON reservation.nom_local = l.nom_local;
-
-
---display des heures durant 1 journee (8-minuit)
-
-SELECT TIME '8:00' + interval '0:15'
-WHERE TIME BETWEEN '8:00' AND '24:00';
-
-WITH q AS
-          (
-              SELECT  30 AS num
-              UNION ALL
-              -- SQLINES LICENSE FOR EVALUATION USE ONLY
-              SELECT  num + 30
-              FROM    q
-              WHERE num < 24 * 60
-          )
--- SQLINES LICENSE FOR EVALUATION USE ONLY
- SELECT  num * interval '1 MINUTE' + cast('00:00:00' as time(0))
- FROM    q
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', NOW(), 'Travail d''équipe',  true, '3027', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('18:00', '20:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('8:00', '9:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('11:00', '12:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('20:00', '21:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('5:00', '6:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
 --- TRIGGER ---
 

@@ -130,8 +130,8 @@ CREATE TABLE Membre
 
 CREATE TABLE Reservation
 (
-    debut INT NOT NULL,
-    fin INT NOT NULL,
+    debut TIME NOT NULL,
+    fin TIME NOT NULL,
     id_reservation SERIAL PRIMARY KEY NOT NULL,
     date DATE NOT NULL,
     description VARCHAR(300),
