@@ -161,14 +161,16 @@ SELECT * FROM Local;
 SELECT * FROM Journal;
 SELECT * FROM Reservation;
 
+SELECT NOW();
+
 -- Insertions Table Reservation -- faire contrainte
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', NOW(), 'Travail d''équipe',  true, '3027', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', '2021-09-26', 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('18:00', '20:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('8:00', '9:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('11:00', '12:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('20:00', '21:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('5:00', '6:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('1:00', '3:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 
 --- TRIGGER TEST ---
 UPDATE Reservation SET debut = '10:00' WHERE id_reservation = 1;
@@ -178,34 +180,45 @@ DELETE FROM Reservation WHERE id_reservation = 1;
 -- SELECT id_pavillon || '-' ||local.nom_local INTO nom_pav_local FROM Local
 -- WHERE nom_local = NEW.nom_local;
 
-SELECT verification_chevauchement(TIME '5:00', TIME '6:00', '3014');
+SELECT verification_chevauchement(TIME '9:00', TIME '13:00', '3014', '2021-09-26');
+SELECT verification_chevauchement(TIME '9:00', TIME '13:00', '3014', '2021-09-28');
+SELECT verification_chevauchement(TIME '1:00', TIME '3:00', '3014', '2021-09-28');
 
+
+
+DROP FUNCTION verification_chevauchement(new_debut TIME, new_fin_ TIME, new_nom_local CHAR(4), new_date DATE);
 -- Function gérant les chevauchements --
-CREATE OR REPLACE FUNCTION verification_chevauchement(new_debut TIME, new_fin_ TIME, new_nom_local CHAR(4))
-RETURNS BOOLEAN AS
+CREATE OR REPLACE FUNCTION verification_chevauchement(new_debut TIME, new_fin_ TIME, new_nom_local CHAR(4), new_date DATE)
+RETURNS INT AS
 $$
 DECLARE
     chevauchement BOOLEAN;
 BEGIN
     chevauchement = NULL;
     WITH get_chevauchement AS (
-        SELECT ((new_debut, new_fin_) OVERLAPS (Reservation.debut,Reservation.fin)) AS chevauchement_state
-        FROM Reservation WHERE etat = True AND nom_local = new_nom_local
+        SELECT ((new_debut, new_fin_) OVERLAPS (Reservation.debut,Reservation.fin)) AS chevauchement_state, date
+        FROM Reservation WHERE etat = True AND nom_local = new_nom_local --AND date = new_date
     )
-    SELECT chevauchement_state INTO chevauchement FROM get_chevauchement WHERE chevauchement_state = True;
-    RETURN chevauchement;
+    SELECT chevauchement_state INTO chevauchement FROM get_chevauchement WHERE chevauchement_state = True; --AND date = new_date;
+
+    IF chevauchement IS NULL THEN
+        chevauchement = False;
+        RETURN 2;
+    END IF;
+    RETURN 1;
 END;
 $$
 LANGUAGE plpgsql;
 
+DROP FUNCTION journal_insert(new_nom VARCHAR(40), cip CHAR(8));
 -- Function pour l'insertion dans le journal selon le nom de l'opération et le cip du membre --
-CREATE OR REPLACE FUNCTION journal_insert(nom VARCHAR(40), cip CHAR(8))
+CREATE OR REPLACE FUNCTION journal_insert(new_nom VARCHAR(40), cip CHAR(8))
 RETURNS BOOLEAN AS
 $$
 DECLARE
     operation_id INT;
 BEGIN
-    SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = 'Nouvelle réservation';
+    SELECT id_operation INTO operation_id FROM Operation WHERE Operation.nom = new_nom;
     INSERT INTO Journal (cip, id_operation)
     VALUES (cip, operation_id);
     RETURN True;
@@ -217,17 +230,16 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION reservation_insert()
 RETURNS TRIGGER AS
 $$
-DECLARE
-    nom_pav_local CHAR(6);
 BEGIN
     -- Gestion des chevauchements
-    IF (SELECT verification_chevauchement(NEW.debut, NEW.fin, NEW.nom_local)) IS NULL THEN
+    IF (SELECT verification_chevauchement(NEW.debut, NEW.fin, NEW.nom_local, NEW.date)) = 2 THEN
         -- Insertion dans le journal
         SELECT journal_insert(VARCHAR(40) 'Nouvelle réservation',NEW.cip);
         RETURN NEW;
     ELSE
         RETURN NULL;
     END IF;
+    RETURN NULL;
 END
 $$
 LANGUAGE plpgsql;

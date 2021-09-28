@@ -43,17 +43,17 @@ CREATE TABLE Fonction
 
 CREATE TABLE Local
 (
-    nom_local CHAR(4) NOT NULL,
+    nom_local VARCHAR(6) NOT NULL,
     capacite INT NOT NULL,
     description VARCHAR(300),
     id_parent CHAR(4),
     id_pavillon CHAR(2) NOT NULL,
     id_fonction CHAR(4) NOT NULL,
-    PRIMARY KEY (nom_local),
+    PRIMARY KEY (nom_local, id_pavillon),
     FOREIGN KEY (id_pavillon) REFERENCES Pavillon(id_pavillon),
     FOREIGN KEY (id_fonction) REFERENCES Fonction(id_fonction),
     CONSTRAINT local_id_local
-        CHECK (nom_local SIMILAR TO '[0-9]{4}')
+        CHECK (nom_local SIMILAR TO '[0-9]{4}|-[0-9]{1}')
 );
 
 CREATE TABLE Operation
