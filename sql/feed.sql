@@ -162,14 +162,13 @@ SELECT * FROM Journal;
 SELECT * FROM Reservation;
 
 -- Insertions Table Reservation -- faire contrainte
-INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
+INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('9:00', '13:00', NOW(), 'Travail d''équipe',  true, '3027', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('18:00', '20:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('8:00', '9:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('11:00', '12:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('20:00', '21:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('5:00', '6:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
 INSERT INTO Reservation (debut, fin, date, description, etat, nom_local, cip) VALUES ('4:00', '5:00', NOW(), 'Travail d''équipe',  true, '3014', 'SAEJ3101');
-
 
 --- TRIGGER TEST ---
 UPDATE Reservation SET debut = '10:00' WHERE id_reservation = 1;
