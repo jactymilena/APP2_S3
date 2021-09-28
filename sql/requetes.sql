@@ -42,31 +42,8 @@ SELECT * FROM tab_debut
     FULL JOIN time_series ON (time_series.interval = fin)
 ORDER BY tab_debut.interval ASC;
 
-WITH recursive time_series_recursive AS (
-    SELECT 30 AS num
-    UNION ALL
-    SELECT  num + 15
-    FROM time_series_recursive
-    WHERE num < 16.5 * 60
-), time_series AS (
-    SELECT num * interval '1 MINUTE' + '7:30'::TIME AS interval
-    FROM time_series_recursive
-), get_reservation AS (
-    SELECT date,debut,fin,id_pavillon,reservation.nom_local,prenom,nom,reservation.description, reservation.id_reservation
-        FROM reservation
-            JOIN membre m
-                 ON reservation.cip = m.cip
-            JOIN local l
-                 ON reservation.nom_local = l.nom_local
-)
-SELECT * FROM get_reservation
-                  FULL JOIN time_series ON (time_series.interval = debut)
-ORDER BY time_series.interval ASC;
 
-SELECT date,reservation.debut,reservation.fin,id_pavillon,reservation.nom_local,prenom,nom,reservation.description, reservation.id_reservation  FROM reservation LEFT JOIN local ON reservation.nom_local = local.nom_local
-                         LEFT JOIN membre m
-                              ON reservation.cip = m.cip
-    WHERE date = '2021-09-28' AND id_fonction = '0211';
+
 
 -- Procedure TABLEAU --
 DROP FUNCTION TABLEAU(new_debut TIME, new_fin TIME, new_date DATE, fonction CHAR(4));
@@ -114,7 +91,6 @@ END
 $$
 LANGUAGE plpgsql;
 
--- CALL TABLEAU(TIME '9:00', TIME '10:00', 'allo');
 SELECT * FROM TABLEAU(TIME'8:00', TIME '00:00', DATE '2021-09-28','0211');
 
 
