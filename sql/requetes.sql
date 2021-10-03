@@ -12,7 +12,6 @@ RETURNS TABLE (
                    prenom_t VARCHAR(20),
                    nom_t VARCHAR(20),
                    description_t VARCHAR(300)
-
               )
 AS
 $$
@@ -51,6 +50,6 @@ END
 $$
 LANGUAGE plpgsql;
 
-SELECT * FROM TABLEAU(TIME'8:00', TIME '22:00', DATE '2021-09-28','0211');
+SELECT * FROM TABLEAU(TIME'8:00', TIME '22:00', DATE '2021-09-26','0211');
 
 

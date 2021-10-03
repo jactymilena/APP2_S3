@@ -43,13 +43,13 @@ CREATE TABLE Fonction
 
 CREATE TABLE Local
 (
-    nom_local VARCHAR(6) NOT NULL,
+    nom_local CHAR(4) NOT NULL,
     capacite INT NOT NULL,
     description VARCHAR(300),
     id_parent CHAR(4),
     id_pavillon CHAR(2) NOT NULL,
     id_fonction CHAR(4) NOT NULL,
-    PRIMARY KEY (nom_local, id_pavillon),
+    PRIMARY KEY (nom_local),
     FOREIGN KEY (id_pavillon) REFERENCES Pavillon(id_pavillon),
     FOREIGN KEY (id_fonction) REFERENCES Fonction(id_fonction),
     CONSTRAINT local_id_local
